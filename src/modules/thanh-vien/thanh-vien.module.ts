@@ -3,7 +3,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ThanhVienController } from './thanh-vien.controller';
 import { ThanhVienService } from './thanh-vien.service';
 import { ThanhVien, ThanhVienSchema } from './schemas/thanh-vien.schema';
-import { DoanhNghiep, DoanhNghiepSchema } from '../doanh-nghiep/schemas/doanh-nghiep.schema';
+import {
+  DoanhNghiep,
+  DoanhNghiepSchema,
+} from '../doanh-nghiep/schemas/doanh-nghiep.schema';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
 @Module({
   imports: [
@@ -13,7 +17,7 @@ import { DoanhNghiep, DoanhNghiepSchema } from '../doanh-nghiep/schemas/doanh-ng
     ]),
   ],
   controllers: [ThanhVienController],
-  providers: [ThanhVienService],
+  providers: [ThanhVienService, DoanhNghiepKichHoatGuard],
   exports: [ThanhVienService, MongooseModule],
 })
 export class ThanhVienModule {}

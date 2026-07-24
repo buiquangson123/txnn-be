@@ -63,7 +63,9 @@ export class CodeGeneratorService {
     const yy = String(ngayTao.getFullYear()).slice(-2);
     const soLo = `${vietTat}${dd}${mm}${yy}${String(stt).padStart(3, '0')}`;
     if (soLo.length > 20) {
-      throw new Error('Số lô vượt quá 20 ký tự, hãy rút ngắn tên viết tắt loại lô hàng');
+      throw new Error(
+        'Số lô vượt quá 20 ký tự, hãy rút ngắn tên viết tắt loại lô hàng',
+      );
     }
     return soLo;
   }

@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CodeGeneratorModule } from './common/code-generator/code-generator.module';
+import { TenantStatusModule } from './common/tenant-status/tenant-status.module';
 import { GoiDichVuModule } from './modules/goi-dich-vu/goi-dich-vu.module';
 import { DoanhNghiepModule } from './modules/doanh-nghiep/doanh-nghiep.module';
 import { ThanhVienModule } from './modules/thanh-vien/thanh-vien.module';
@@ -32,6 +33,7 @@ import { UploadModule } from './modules/upload/upload.module';
       }),
     }),
     CodeGeneratorModule,
+    TenantStatusModule,
     GoiDichVuModule,
     DoanhNghiepModule,
     ThanhVienModule,

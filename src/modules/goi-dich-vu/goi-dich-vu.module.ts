@@ -6,7 +6,9 @@ import { GoiDichVu, GoiDichVuSchema } from './schemas/goi-dich-vu.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: GoiDichVu.name, schema: GoiDichVuSchema }]),
+    MongooseModule.forFeature([
+      { name: GoiDichVu.name, schema: GoiDichVuSchema },
+    ]),
   ],
   controllers: [GoiDichVuController],
   providers: [GoiDichVuService],

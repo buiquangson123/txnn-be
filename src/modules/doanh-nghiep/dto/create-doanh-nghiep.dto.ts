@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 import { LoaiHinhDoanhNghiep } from '../schemas/doanh-nghiep.schema';
 
 export class CreateDoanhNghiepDto {
@@ -32,11 +32,6 @@ export class CreateDoanhNghiepDto {
   @IsOptional()
   @IsString()
   logo?: string;
-
-  /** Gán gói dịch vụ ngay trong luồng tạo DN (tùy chọn) */
-  @IsOptional()
-  @IsMongoId()
-  goiDichVuId?: string;
 
   /** SĐT thành viên đầu tiên - dùng để khởi tạo tài khoản Admin DN */
   @IsOptional()

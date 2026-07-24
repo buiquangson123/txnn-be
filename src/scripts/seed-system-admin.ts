@@ -5,7 +5,9 @@ import { ThanhVienService } from '../modules/thanh-vien/thanh-vien.service';
 async function bootstrap() {
   const [soDienThoai, matKhau, hoTen] = process.argv.slice(2);
   if (!soDienThoai || !matKhau) {
-    console.error('Cách dùng: npm run seed:admin -- <soDienThoai> <matKhau> [hoTen]');
+    console.error(
+      'Cách dùng: npm run seed:admin -- <soDienThoai> <matKhau> [hoTen]',
+    );
     process.exit(1);
   }
 

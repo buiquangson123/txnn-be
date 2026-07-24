@@ -16,37 +16,43 @@ import { QueryLoaiKhoiLuongDto } from './dto/query-loai-khoi-luong.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+@UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+@Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
 @Controller('loai-khoi-luong')
 export class LoaiKhoiLuongController {
   constructor(private readonly loaiKhoiLuongService: LoaiKhoiLuongService) {}
 
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateLoaiKhoiLuongDto) {
-    return this.loaiKhoiLuongService.create(user.doanhNghiepId, dto);
+  create(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Body() dto: CreateLoaiKhoiLuongDto,
+  ) {
+    return this.loaiKhoiLuongService.create(doanhNghiepId, dto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QueryLoaiKhoiLuongDto) {
-    return this.loaiKhoiLuongService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QueryLoaiKhoiLuongDto,
+  ) {
+    return this.loaiKhoiLuongService.findAll(doanhNghiepId, query);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateLoaiKhoiLuongDto,
   ) {
-    return this.loaiKhoiLuongService.update(user.doanhNghiepId, id, dto);
+    return this.loaiKhoiLuongService.update(doanhNghiepId, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.loaiKhoiLuongService.remove(user.doanhNghiepId, id);
+  remove(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.loaiKhoiLuongService.remove(doanhNghiepId, id);
   }
 }

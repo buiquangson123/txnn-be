@@ -19,7 +19,11 @@ export type LoHangDocument = LoHang & Document;
 
 @Schema({ timestamps: true, collection: 'lo_hang' })
 export class LoHang {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: DoanhNghiep.name, required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: DoanhNghiep.name,
+    required: true,
+  })
   doanhNghiep: Types.ObjectId;
 
   @Prop({ required: true, trim: true, maxlength: 20 })
@@ -29,11 +33,27 @@ export class LoHang {
   @Prop({ trim: true })
   maTruyVetLoHang?: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: LoaiLoHang.name, required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: LoaiLoHang.name,
+    required: true,
+  })
   loaiLoHang: Types.ObjectId;
 
+  @Prop({ required: true, trim: true })
+  tenLoHang: string;
+
   @Prop({ trim: true })
-  tenLoHang?: string;
+  moTa?: string;
+
+  @Prop({ type: [String], default: [] })
+  hinhAnh: string[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'GiayTo', default: [] })
+  giayChungNhan: Types.ObjectId[];
+
+  @Prop({ trim: true })
+  quyCachDongGoi?: string;
 
   @Prop({ type: String, enum: DoiTuongLoHang, required: true })
   doiTuong: DoiTuongLoHang;
@@ -57,6 +77,9 @@ export class LoHang {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: DonViTrucThuoc.name })
   donViSanXuat?: Types.ObjectId;
+
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: DonViTrucThuoc.name })
+  donViPhanPhoi?: Types.ObjectId;
 
   @Prop({ min: 0 })
   khoiLuong?: number;

@@ -4,7 +4,10 @@ import { Model } from 'mongoose';
 import { CreateLoaiSoLuongDto } from './dto/create-loai-so-luong.dto';
 import { UpdateLoaiSoLuongDto } from './dto/update-loai-so-luong.dto';
 import { QueryLoaiSoLuongDto } from './dto/query-loai-so-luong.dto';
-import { LoaiSoLuong, LoaiSoLuongDocument } from './schemas/loai-so-luong.schema';
+import {
+  LoaiSoLuong,
+  LoaiSoLuongDocument,
+} from './schemas/loai-so-luong.schema';
 
 @Injectable()
 export class LoaiSoLuongService {
@@ -27,7 +30,9 @@ export class LoaiSoLuongService {
 
   async update(doanhNghiepId: string, id: string, dto: UpdateLoaiSoLuongDto) {
     const item = await this.loaiSoLuongModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, {
+        new: true,
+      })
       .exec();
     if (!item) {
       throw new NotFoundException('Không tìm thấy loại số lượng');

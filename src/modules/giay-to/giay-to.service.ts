@@ -35,8 +35,6 @@ export class GiayToService {
 
   async findAll(doanhNghiepId: string, query: QueryGiayToDto) {
     const filter: Record<string, unknown> = { doanhNghiep: doanhNghiepId };
-    if (query.doiTuongApDung) filter.doiTuongApDung = query.doiTuongApDung;
-    if (query.doiTuongId) filter.doiTuongId = query.doiTuongId;
     if (query.keyword) {
       filter.$or = [
         { tenGiayTo: { $regex: query.keyword, $options: 'i' } },
@@ -49,7 +47,11 @@ export class GiayToService {
       );
       filter.ngayHetHan = { $lte: nguong };
     }
-    const items = await this.giayToModel.find(filter).sort({ createdAt: -1 }).lean().exec();
+    const items = await this.giayToModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
     return items.map((item) => this.gomTrangThai(item));
   }
 
@@ -66,7 +68,9 @@ export class GiayToService {
 
   async update(doanhNghiepId: string, id: string, dto: UpdateGiayToDto) {
     const giayTo = await this.giayToModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, {
+        new: true,
+      })
       .exec();
     if (!giayTo) {
       throw new NotFoundException('Không tìm thấy giấy tờ');

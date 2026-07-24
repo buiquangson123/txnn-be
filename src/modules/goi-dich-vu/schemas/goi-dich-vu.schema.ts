@@ -23,9 +23,6 @@ export class GoiDichVu {
   dungLuongLuuTruMB?: number;
 
   @Prop({ min: 0 })
-  thoiHanNgay?: number;
-
-  @Prop({ min: 0 })
   giaGoi?: number;
 
   @Prop({
@@ -36,7 +33,7 @@ export class GoiDichVu {
   trangThai: TrangThaiGoiDichVu;
 
   @Prop({ trim: true })
-  moTaQuyenLoi?: string;
+  ghiChu?: string;
 }
 
 export const GoiDichVuSchema = SchemaFactory.createForClass(GoiDichVu);

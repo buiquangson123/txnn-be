@@ -1,5 +1,4 @@
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { DoiTuongDiaDiemBatBuoc } from '../schemas/loai-lo-hang.schema';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateLoaiLoHangDto {
   @IsString()
@@ -10,7 +9,4 @@ export class CreateLoaiLoHangDto {
   @IsString()
   @MaxLength(10)
   vietTat?: string;
-
-  @IsEnum(DoiTuongDiaDiemBatBuoc)
-  doiTuongDiaDiemBatBuoc: DoiTuongDiaDiemBatBuoc;
 }

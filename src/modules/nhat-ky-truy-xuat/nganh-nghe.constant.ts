@@ -1,0 +1,140 @@
+/**
+ * Danh sách Ngành nghề + Công đoạn tĩnh (rule.md mục 17) - cố định trong code,
+ * không có màn quản lý cho System Admin (theo xác nhận của khách - xem
+ * cau-hoi-lam-ro-yeu-cau.md Q8.2). FE có một bản sao y hệt danh sách này ở
+ * src/features/nhat-ky-truy-xuat/nganh-nghe.constant.ts - sửa thì sửa cả 2 nơi.
+ */
+export enum NganhNghe {
+  TRONG_TROT = 'trong_trot',
+  CHAN_NUOI = 'chan_nuoi',
+  THUY_SAN = 'thuy_san',
+  THUC_PHAM_DO_UONG = 'thuc_pham_do_uong',
+  MY_PHAM = 'my_pham',
+  DUOC_PHAM_THIET_BI_Y_TE = 'duoc_pham_thiet_bi_y_te',
+  THU_CONG_MY_NGHE = 'thu_cong_my_nghe',
+  SAN_XUAT_CONG_NGHIEP = 'san_xuat_cong_nghiep',
+  VAT_LIEU_XAY_DUNG = 'vat_lieu_xay_dung',
+  HOA_CHAT_VAT_TU = 'hoa_chat_vat_tu',
+  KHAC = 'khac',
+}
+
+export const TEN_NGANH_NGHE: Record<NganhNghe, string> = {
+  [NganhNghe.TRONG_TROT]: 'Trồng trọt, lâm nghiệp & dược liệu',
+  [NganhNghe.CHAN_NUOI]: 'Chăn nuôi',
+  [NganhNghe.THUY_SAN]: 'Thủy sản',
+  [NganhNghe.THUC_PHAM_DO_UONG]: 'Thực phẩm & đồ uống',
+  [NganhNghe.MY_PHAM]: 'Mỹ phẩm',
+  [NganhNghe.DUOC_PHAM_THIET_BI_Y_TE]: 'Dược phẩm & Thiết bị y tế',
+  [NganhNghe.THU_CONG_MY_NGHE]: 'Thủ công mỹ nghệ',
+  [NganhNghe.SAN_XUAT_CONG_NGHIEP]: 'Sản xuất công nghiệp',
+  [NganhNghe.VAT_LIEU_XAY_DUNG]: 'Vật liệu xây dựng',
+  [NganhNghe.HOA_CHAT_VAT_TU]: 'Hóa chất & Vật tư',
+  [NganhNghe.KHAC]: 'Khác',
+};
+
+/** Không có danh sách công đoạn cố định cho ngành KHAC - DN tự nhập text hoàn toàn */
+export const CONG_DOAN_THEO_NGANH: Partial<Record<NganhNghe, string[]>> = {
+  [NganhNghe.TRONG_TROT]: [
+    'Chuẩn bị vùng sản xuất',
+    'Chuẩn bị giống/Vật tư',
+    'Gieo trồng',
+    'Chăm sóc',
+    'Thu hoạch',
+    'Sơ chế',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.CHAN_NUOI]: [
+    'Chuẩn bị cơ sở chăn nuôi',
+    'Nhập giống',
+    'Chăm sóc',
+    'Kiểm dịch/Kiểm tra sức khỏe',
+    'Xuất chuồng',
+    'Sơ chế (nếu có)',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.THUY_SAN]: [
+    'Chuẩn bị vùng nuôi',
+    'Thả giống',
+    'Chăm sóc',
+    'Quan trắc môi trường',
+    'Thu hoạch',
+    'Sơ chế',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.THUC_PHAM_DO_UONG]: [
+    'Tiếp nhận nguyên liệu',
+    'Sơ chế nguyên liệu',
+    'Chế biến',
+    'Kiểm tra chất lượng',
+    'Đóng gói',
+    'Gắn tem QR',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.MY_PHAM]: [
+    'Tiếp nhận nguyên liệu',
+    'Cân đong/Pha chế',
+    'Sản xuất',
+    'Kiểm tra chất lượng',
+    'Chiết rót',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.DUOC_PHAM_THIET_BI_Y_TE]: [
+    'Tiếp nhận nguyên liệu/Linh kiện',
+    'Sản xuất/Lắp ráp',
+    'Kiểm nghiệm',
+    'Đóng gói',
+    'Gắn mã định danh',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.THU_CONG_MY_NGHE]: [
+    'Chuẩn bị nguyên liệu',
+    'Sơ chế nguyên liệu',
+    'Chế tác',
+    'Hoàn thiện',
+    'Kiểm tra chất lượng',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.SAN_XUAT_CONG_NGHIEP]: [
+    'Tiếp nhận nguyên liệu/Linh kiện',
+    'Gia công',
+    'Lắp ráp',
+    'Kiểm tra chất lượng',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+  [NganhNghe.VAT_LIEU_XAY_DUNG]: [
+    'Tiếp nhận nguyên liệu',
+    'Gia công/Sản xuất',
+    'Kiểm tra chất lượng',
+    'Đóng gói (nếu có)',
+    'Lưu kho',
+    'Xuất kho',
+    'Phân phối',
+  ],
+  [NganhNghe.HOA_CHAT_VAT_TU]: [
+    'Tiếp nhận nguyên liệu',
+    'Pha chế/Phối trộn',
+    'Sản xuất',
+    'Kiểm nghiệm',
+    'Chiết rót',
+    'Đóng gói',
+    'Nhập kho',
+    'Phân phối',
+  ],
+};
+
+/** Nhãn dùng chung cho lựa chọn "Khác" trong danh sách công đoạn của mọi ngành */
+export const CONG_DOAN_KHAC = 'Khác';

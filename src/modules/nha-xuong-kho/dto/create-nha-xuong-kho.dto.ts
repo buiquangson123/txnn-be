@@ -1,5 +1,11 @@
-import { IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
-import { LoaiDiaDiemNoiBo } from '../schemas/nha-xuong-kho.schema';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateNhaXuongKhoDto {
   @IsString()
@@ -9,9 +15,6 @@ export class CreateNhaXuongKhoDto {
   @IsString()
   diaChi?: string;
 
-  @IsEnum(LoaiDiaDiemNoiBo)
-  loaiDiaDiemNoiBo: LoaiDiaDiemNoiBo;
-
   @IsOptional()
   @IsString()
   nguoiPhuTrach?: string;
@@ -19,6 +22,20 @@ export class CreateNhaXuongKhoDto {
   @IsOptional()
   @IsNumber()
   congSuat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  dienTich?: number;
+
+  @IsOptional()
+  @IsString()
+  maCoSoChanNuoiDongGoi?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @IsString({ each: true })
+  hinhAnh?: string[];
 
   /** Để trống nếu DN chưa có mã GLN - hệ thống sẽ tự sinh */
   @IsOptional()

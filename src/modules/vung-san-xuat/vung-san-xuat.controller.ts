@@ -16,42 +16,48 @@ import { QueryVungSanXuatDto } from './dto/query-vung-san-xuat.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+@UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+@Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
 @Controller('vung-san-xuat')
 export class VungSanXuatController {
   constructor(private readonly vungSanXuatService: VungSanXuatService) {}
 
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateVungSanXuatDto) {
-    return this.vungSanXuatService.create(user.doanhNghiepId, dto);
+  create(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Body() dto: CreateVungSanXuatDto,
+  ) {
+    return this.vungSanXuatService.create(doanhNghiepId, dto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QueryVungSanXuatDto) {
-    return this.vungSanXuatService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QueryVungSanXuatDto,
+  ) {
+    return this.vungSanXuatService.findAll(doanhNghiepId, query);
   }
 
   @Get(':id')
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.vungSanXuatService.findOne(user.doanhNghiepId, id);
+  findOne(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.vungSanXuatService.findOne(doanhNghiepId, id);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateVungSanXuatDto,
   ) {
-    return this.vungSanXuatService.update(user.doanhNghiepId, id, dto);
+    return this.vungSanXuatService.update(doanhNghiepId, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.vungSanXuatService.remove(user.doanhNghiepId, id);
+  remove(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.vungSanXuatService.remove(doanhNghiepId, id);
   }
 }

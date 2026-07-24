@@ -6,7 +6,9 @@ import { CounterService } from '../counter/counter.service';
 
 @Global()
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }]),
+  ],
   providers: [CodeGeneratorService, CounterService],
   exports: [CodeGeneratorService, CounterService],
 })

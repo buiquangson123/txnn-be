@@ -1,6 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { ConfigService } from '@nestjs/config';
+import * as QRCode from 'qrcode';
 import { CodeGeneratorService } from '../../common/code-generator/code-generator.service';
 import { CounterService } from '../../common/counter/counter.service';
 import { SanPham, SanPhamDocument } from '../san-pham/schemas/san-pham.schema';
@@ -8,10 +14,15 @@ import { VatTu, VatTuDocument } from '../vat-tu/schemas/vat-tu.schema';
 import {
   LoaiLoHang,
   LoaiLoHangDocument,
-  DoiTuongDiaDiemBatBuoc,
 } from '../loai-lo-hang/schemas/loai-lo-hang.schema';
-import { VungSanXuat, VungSanXuatDocument } from '../vung-san-xuat/schemas/vung-san-xuat.schema';
-import { NhaXuongKho, NhaXuongKhoDocument } from '../nha-xuong-kho/schemas/nha-xuong-kho.schema';
+import {
+  VungSanXuat,
+  VungSanXuatDocument,
+} from '../vung-san-xuat/schemas/vung-san-xuat.schema';
+import {
+  NhaXuongKho,
+  NhaXuongKhoDocument,
+} from '../nha-xuong-kho/schemas/nha-xuong-kho.schema';
 import {
   DonViTrucThuoc,
   DonViTrucThuocDocument,
@@ -19,10 +30,14 @@ import {
 import { CreateLoHangDto } from './dto/create-lo-hang.dto';
 import { UpdateLoHangDto } from './dto/update-lo-hang.dto';
 import { QueryLoHangDto } from './dto/query-lo-hang.dto';
-import { DoiTuongLoHang, LoHang, LoHangDocument } from './schemas/lo-hang.schema';
+import {
+  DoiTuongLoHang,
+  LoHang,
+  LoHangDocument,
+} from './schemas/lo-hang.schema';
 
 const POPULATE_FIELDS =
-  'loaiLoHang sanPham vatTu vungSanXuat nhaXuong donViSanXuat loaiKhoiLuong loaiSoLuong nguyenLieuDauVao';
+  'loaiLoHang sanPham vatTu vungSanXuat nhaXuong donViSanXuat donViPhanPhoi loaiKhoiLuong loaiSoLuong nguyenLieuDauVao giayChungNhan';
 
 @Injectable()
 export class LoHangService {
@@ -43,6 +58,7 @@ export class LoHangService {
     private readonly donViTrucThuocModel: Model<DonViTrucThuocDocument>,
     private readonly codeGeneratorService: CodeGeneratorService,
     private readonly counterService: CounterService,
+    private readonly configService: ConfigService,
   ) {}
 
   private tinhN1(nguyenLieuList: { n1?: number }[]): number {
@@ -68,62 +84,76 @@ export class LoHangService {
       throw new BadRequestException('Loại lô hàng không tồn tại');
     }
 
-    if (loaiLoHang.doiTuongDiaDiemBatBuoc === DoiTuongDiaDiemBatBuoc.VUNG_SAN_XUAT) {
-      if (!dto.vungSanXuatId) {
-        throw new BadRequestException(
-          `Loại lô hàng "${loaiLoHang.tenLoaiLo}" bắt buộc chọn Vùng sản xuất`,
-        );
-      }
+    if (dto.vungSanXuatId) {
       const vungSanXuat = await this.vungSanXuatModel
         .findOne({ _id: dto.vungSanXuatId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!vungSanXuat) {
-        throw new BadRequestException('Vùng sản xuất không tồn tại trong doanh nghiệp');
-      }
-    } else {
-      if (!dto.nhaXuongId) {
         throw new BadRequestException(
-          `Loại lô hàng "${loaiLoHang.tenLoaiLo}" bắt buộc chọn Nhà xưởng sản xuất`,
+          'Vùng sản xuất không tồn tại trong doanh nghiệp',
         );
       }
+    }
+    if (dto.nhaXuongId) {
       const nhaXuong = await this.nhaXuongKhoModel
         .findOne({ _id: dto.nhaXuongId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!nhaXuong) {
-        throw new BadRequestException('Nhà xưởng không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Nhà xưởng không tồn tại trong doanh nghiệp',
+        );
       }
     }
-
     if (dto.donViSanXuatId) {
       const donVi = await this.donViTrucThuocModel
         .findOne({ _id: dto.donViSanXuatId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!donVi) {
-        throw new BadRequestException('Đơn vị sản xuất không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Đơn vị sản xuất không tồn tại trong doanh nghiệp',
+        );
+      }
+    }
+    if (dto.donViPhanPhoiId) {
+      const donVi = await this.donViTrucThuocModel
+        .findOne({ _id: dto.donViPhanPhoiId, doanhNghiep: doanhNghiepId })
+        .exec();
+      if (!donVi) {
+        throw new BadRequestException(
+          'Đơn vị phân phối không tồn tại trong doanh nghiệp',
+        );
       }
     }
 
     let sanPham: SanPhamDocument | null = null;
+    let vatTu: VatTuDocument | null = null;
     if (dto.doiTuong === DoiTuongLoHang.SAN_PHAM) {
       sanPham = await this.sanPhamModel
         .findOne({ _id: dto.sanPhamId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!sanPham) {
-        throw new BadRequestException('Sản phẩm không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Sản phẩm không tồn tại trong doanh nghiệp',
+        );
       }
     } else {
-      const vatTu = await this.vatTuModel
+      vatTu = await this.vatTuModel
         .findOne({ _id: dto.vatTuId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!vatTu) {
-        throw new BadRequestException('Vật tư không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Vật tư không tồn tại trong doanh nghiệp',
+        );
       }
     }
 
     let nguyenLieuLoList: LoHangDocument[] = [];
     if (dto.nguyenLieuDauVao && dto.nguyenLieuDauVao.length > 0) {
       nguyenLieuLoList = await this.loHangModel
-        .find({ _id: { $in: dto.nguyenLieuDauVao }, doanhNghiep: doanhNghiepId })
+        .find({
+          _id: { $in: dto.nguyenLieuDauVao },
+          doanhNghiep: doanhNghiepId,
+        })
         .exec();
       if (nguyenLieuLoList.length !== dto.nguyenLieuDauVao.length) {
         throw new BadRequestException(
@@ -156,12 +186,19 @@ export class LoHangService {
       );
     }
 
+    // Tự động lấy hình ảnh từ sản phẩm/vật tư được gán vào làm hình ảnh lô
+    const hinhAnh = sanPham?.hinhAnh ?? vatTu?.hinhAnh ?? [];
+
     return this.loHangModel.create({
       doanhNghiep: doanhNghiepId,
       soLo,
       maTruyVetLoHang,
       loaiLoHang: dto.loaiLoHangId,
       tenLoHang: dto.tenLoHang,
+      moTa: dto.moTa,
+      hinhAnh,
+      giayChungNhan: dto.giayChungNhan ?? [],
+      quyCachDongGoi: dto.quyCachDongGoi,
       doiTuong: dto.doiTuong,
       sanPham: dto.sanPhamId,
       vatTu: dto.vatTuId,
@@ -169,6 +206,7 @@ export class LoHangService {
       n1,
       nguyenLieuDauVao: dto.nguyenLieuDauVao ?? [],
       donViSanXuat: dto.donViSanXuatId,
+      donViPhanPhoi: dto.donViPhanPhoiId,
       khoiLuong: dto.khoiLuong,
       loaiKhoiLuong: dto.loaiKhoiLuongId,
       soLuong: dto.soLuong,
@@ -218,7 +256,19 @@ export class LoHangService {
         .findOne({ _id: dto.donViSanXuatId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!donVi) {
-        throw new BadRequestException('Đơn vị sản xuất không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Đơn vị sản xuất không tồn tại trong doanh nghiệp',
+        );
+      }
+    }
+    if (dto.donViPhanPhoiId) {
+      const donVi = await this.donViTrucThuocModel
+        .findOne({ _id: dto.donViPhanPhoiId, doanhNghiep: doanhNghiepId })
+        .exec();
+      if (!donVi) {
+        throw new BadRequestException(
+          'Đơn vị phân phối không tồn tại trong doanh nghiệp',
+        );
       }
     }
     if (dto.vungSanXuatId) {
@@ -226,7 +276,9 @@ export class LoHangService {
         .findOne({ _id: dto.vungSanXuatId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!vungSanXuat) {
-        throw new BadRequestException('Vùng sản xuất không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Vùng sản xuất không tồn tại trong doanh nghiệp',
+        );
       }
     }
     if (dto.nhaXuongId) {
@@ -234,11 +286,36 @@ export class LoHangService {
         .findOne({ _id: dto.nhaXuongId, doanhNghiep: doanhNghiepId })
         .exec();
       if (!nhaXuong) {
-        throw new BadRequestException('Nhà xưởng không tồn tại trong doanh nghiệp');
+        throw new BadRequestException(
+          'Nhà xưởng không tồn tại trong doanh nghiệp',
+        );
       }
     }
+
+    // Tên DTO (…Id) khác tên ref field trong schema - map lại trước khi update,
+    // tránh Mongoose strict mode âm thầm bỏ qua field không khớp tên.
+    const {
+      donViSanXuatId,
+      donViPhanPhoiId,
+      vungSanXuatId,
+      nhaXuongId,
+      loaiKhoiLuongId,
+      loaiSoLuongId,
+      ...rest
+    } = dto;
+    const update: Record<string, unknown> = { ...rest };
+    if (donViSanXuatId !== undefined) update.donViSanXuat = donViSanXuatId;
+    if (donViPhanPhoiId !== undefined) update.donViPhanPhoi = donViPhanPhoiId;
+    if (vungSanXuatId !== undefined) update.vungSanXuat = vungSanXuatId;
+    if (nhaXuongId !== undefined) update.nhaXuong = nhaXuongId;
+    if (loaiKhoiLuongId !== undefined) update.loaiKhoiLuong = loaiKhoiLuongId;
+    if (loaiSoLuongId !== undefined) update.loaiSoLuong = loaiSoLuongId;
+
     const loHang = await this.loHangModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, update, {
+        new: true,
+      })
+      .populate(POPULATE_FIELDS)
       .exec();
     if (!loHang) {
       throw new NotFoundException('Không tìm thấy lô hàng');
@@ -259,14 +336,44 @@ export class LoHangService {
     }
     const sanPham = await this.sanPhamModel.findById(loHang.sanPham).exec();
     if (!sanPham) {
-      throw new BadRequestException('Sản phẩm gốc của lô hàng không còn tồn tại');
+      throw new BadRequestException(
+        'Sản phẩm gốc của lô hàng không còn tồn tại',
+      );
     }
     loHang.n1 = n1;
-    loHang.maTruyVetVatPham = this.codeGeneratorService.generateMaTruyVetVatPham(
-      sanPham.maGTIN as string,
-      n1,
-    );
+    loHang.maTruyVetVatPham =
+      this.codeGeneratorService.generateMaTruyVetVatPham(
+        sanPham.maGTIN as string,
+        n1,
+      );
     await loHang.save();
     return loHang;
+  }
+
+  /**
+   * Sinh ảnh QR (PNG buffer) trỏ tới trang truy xuất công khai của lô hàng.
+   * Áp dụng cho mọi lô (cả sản phẩm lẫn vật tư) - dùng mã truy vết lô hàng nếu có
+   * (chỉ lô sản phẩm mới có), ngược lại dùng chính _id của lô làm định danh.
+   */
+  async sinhMaQR(
+    doanhNghiepId: string,
+    id: string,
+  ): Promise<{ buffer: Buffer; tenLoHang: string }> {
+    const loHang = await this.loHangModel
+      .findOne({ _id: id, doanhNghiep: doanhNghiepId })
+      .exec();
+    if (!loHang) {
+      throw new NotFoundException('Không tìm thấy lô hàng');
+    }
+    // Domain public tạm thời - trang truy xuất công khai chưa được xây dựng, xem CLAUDE.md.
+    const baseUrl = this.configService.get<string>(
+      'PUBLIC_TRACE_BASE_URL',
+      'https://trace.example.com',
+    );
+    const dinhDanh =
+      loHang.maTruyVetLoHang ?? (loHang._id as Types.ObjectId).toString();
+    const noiDung = `${baseUrl}/lo-hang/${dinhDanh}`;
+    const buffer = await QRCode.toBuffer(noiDung, { type: 'png', width: 400 });
+    return { buffer, tenLoHang: loHang.tenLoHang ?? loHang.soLo };
   }
 }

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
@@ -18,58 +17,70 @@ import { QuerySanPhamDto } from './dto/query-san-pham.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import type { JwtPayload } from '../auth/jwt-payload.interface';
 import { Role } from '../../common/enums/role.enum';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+@UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+@Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
 @Controller('san-pham')
 export class SanPhamController {
   constructor(private readonly sanPhamService: SanPhamService) {}
 
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateSanPhamDto) {
-    return this.sanPhamService.create(user.doanhNghiepId, dto);
+  create(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Body() dto: CreateSanPhamDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.sanPhamService.create(doanhNghiepId, dto, user.sub);
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QuerySanPhamDto) {
-    return this.sanPhamService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QuerySanPhamDto,
+  ) {
+    return this.sanPhamService.findAll(doanhNghiepId, query);
   }
 
   @Get(':id')
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.sanPhamService.findOne(user.doanhNghiepId, id);
+  findOne(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.sanPhamService.findOne(doanhNghiepId, id);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateSanPhamDto,
   ) {
-    return this.sanPhamService.update(user.doanhNghiepId, id, dto);
+    return this.sanPhamService.update(doanhNghiepId, id, dto);
   }
 
   @Patch(':id/ngung-kinh-doanh')
-  ngungKinhDoanh(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.sanPhamService.ngungKinhDoanh(user.doanhNghiepId, id);
+  ngungKinhDoanh(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Param('id') id: string,
+  ) {
+    return this.sanPhamService.ngungKinhDoanh(doanhNghiepId, id);
   }
 
   @Patch(':id/mo-ban-lai')
-  moBanLai(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.sanPhamService.moBanLai(user.doanhNghiepId, id);
+  moBanLai(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.sanPhamService.moBanLai(doanhNghiepId, id);
   }
 
   @Get(':id/qr-code')
   async taiMaQR(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
     const { buffer, tenSanPham } = await this.sanPhamService.sinhMaQR(
-      user.doanhNghiepId,
+      doanhNghiepId,
       id,
     );
     const tenFile = `${tenSanPham.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.png`;

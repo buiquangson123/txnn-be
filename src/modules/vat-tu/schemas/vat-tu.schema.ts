@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 import { DoanhNghiep } from '../../doanh-nghiep/schemas/doanh-nghiep.schema';
+import { DonViTrucThuoc } from '../../don-vi-truc-thuoc/schemas/don-vi-truc-thuoc.schema';
 
 export enum NhomVatTu {
   GIONG = 'giong',
@@ -15,7 +16,11 @@ export type VatTuDocument = VatTu & Document;
 
 @Schema({ timestamps: true, collection: 'vat_tu' })
 export class VatTu {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: DoanhNghiep.name, required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: DoanhNghiep.name,
+    required: true,
+  })
   doanhNghiep: Types.ObjectId;
 
   @Prop({ required: true, trim: true })
@@ -24,8 +29,8 @@ export class VatTu {
   @Prop({ type: String, enum: NhomVatTu, required: true })
   nhomVatTu: NhomVatTu;
 
-  @Prop({ trim: true })
-  nhaCungCap?: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: DonViTrucThuoc.name })
+  nhaCungCap?: Types.ObjectId;
 
   @Prop({ trim: true })
   donViTinh?: string;
@@ -34,7 +39,10 @@ export class VatTu {
   moTa?: string;
 
   @Prop()
-  hanSuDung?: Date;
+  hanSuDungTu?: Date;
+
+  @Prop()
+  hanSuDungDen?: Date;
 
   @Prop({ type: [String], default: [] })
   hinhAnh: string[];
