@@ -6,10 +6,16 @@ const DANH_SACH_MAC_DINH = [
   { maAI: '410', tenChuThich: 'Mã truy vết địa điểm vật phẩm gửi đến' },
   { maAI: '411', tenChuThich: 'Mã truy vết địa điểm đơn vị nhận hóa đơn' },
   { maAI: '412', tenChuThich: 'Mã truy vết địa điểm mua vật phẩm' },
-  { maAI: '413', tenChuThich: 'Mã truy vết địa điểm (nội bộ hoặc chuyển tiền)' },
+  {
+    maAI: '413',
+    tenChuThich: 'Mã truy vết địa điểm (nội bộ hoặc chuyển tiền)',
+  },
   { maAI: '414', tenChuThich: 'Mã truy vết địa điểm vật lý' },
   { maAI: '415', tenChuThich: 'Mã truy vết địa điểm đơn vị lập hóa đơn' },
-  { maAI: '416', tenChuThich: 'Mã truy vết địa điểm sản xuất, cung cấp dịch vụ' },
+  {
+    maAI: '416',
+    tenChuThich: 'Mã truy vết địa điểm sản xuất, cung cấp dịch vụ',
+  },
   { maAI: '417', tenChuThich: 'Mã truy vết địa điểm đối tác' },
 ];
 

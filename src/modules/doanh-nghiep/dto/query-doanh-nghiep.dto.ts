@@ -1,5 +1,8 @@
 import { IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
-import { LoaiHinhDoanhNghiep, TrangThaiDoanhNghiep } from '../schemas/doanh-nghiep.schema';
+import {
+  LoaiHinhDoanhNghiep,
+  TrangThaiDoanhNghiep,
+} from '../schemas/doanh-nghiep.schema';
 
 export class QueryDoanhNghiepDto {
   @IsOptional()

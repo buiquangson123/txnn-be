@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CodeGeneratorService } from '../../common/code-generator/code-generator.service';
@@ -20,7 +24,10 @@ export class LoaiLoHangService {
     vietTat: string,
     excludeId?: string,
   ) {
-    const filter: Record<string, unknown> = { doanhNghiep: doanhNghiepId, vietTat };
+    const filter: Record<string, unknown> = {
+      doanhNghiep: doanhNghiepId,
+      vietTat,
+    };
     if (excludeId) filter._id = { $ne: excludeId };
     const trung = await this.loaiLoHangModel.findOne(filter).exec();
     if (trung) {
@@ -38,7 +45,6 @@ export class LoaiLoHangService {
     return this.loaiLoHangModel.create({
       tenLoaiLo: dto.tenLoaiLo,
       vietTat,
-      doiTuongDiaDiemBatBuoc: dto.doiTuongDiaDiemBatBuoc,
       doanhNghiep: doanhNghiepId,
     });
   }
@@ -62,7 +68,9 @@ export class LoaiLoHangService {
       update.vietTat = vietTat;
     }
     const item = await this.loaiLoHangModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, update, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, update, {
+        new: true,
+      })
       .exec();
     if (!item) {
       throw new NotFoundException('Không tìm thấy loại lô hàng');

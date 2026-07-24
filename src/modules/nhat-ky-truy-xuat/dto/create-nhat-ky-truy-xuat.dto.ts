@@ -1,47 +1,57 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
-  IsDateString,
   IsEnum,
   IsMongoId,
   IsOptional,
   IsString,
   ValidateIf,
 } from 'class-validator';
-import { DoiTuongNhatKy, LoaiDiaDiemThucHien } from '../schemas/nhat-ky-truy-xuat.schema';
+import { DoiTuongNhatKy } from '../schemas/nhat-ky-truy-xuat.schema';
+import { NganhNghe } from '../nganh-nghe.constant';
 
 export class CreateNhatKyTruyXuatDto {
-  @IsDateString()
-  thoiGianThucHien: string;
+  @IsEnum(NganhNghe)
+  nganhNghe: NganhNghe;
 
-  @IsMongoId()
-  nguoiThucHienId: string;
+  @ValidateIf((o) => o.nganhNghe === NganhNghe.KHAC)
+  @IsString()
+  nganhNgheKhac?: string;
+
+  @IsString()
+  congDoanTen: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  vatTu?: string[];
 
   @IsString()
   noiDungCongViec: string;
 
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'Vui lòng tải lên ít nhất 1 hình ảnh' })
   @IsString({ each: true })
-  hinhAnhTaiLieu?: string[];
+  hinhAnhTaiLieu: string[];
 
   @IsOptional()
-  @IsEnum(LoaiDiaDiemThucHien)
-  loaiDiaDiemThucHien?: LoaiDiaDiemThucHien;
+  @IsString()
+  ghiChu?: string;
 
-  @ValidateIf((o) => !!o.loaiDiaDiemThucHien)
+  @IsOptional()
   @IsMongoId()
-  diaDiemId?: string;
+  vungSanXuatId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  nhaXuongId?: string;
 
   @IsEnum(DoiTuongNhatKy)
   doiTuongLienQuan: DoiTuongNhatKy;
 
   @IsMongoId()
   doiTuongId: string;
-
-  @IsOptional()
-  @IsMongoId()
-  congDoanId?: string;
 
   @IsOptional()
   @IsBoolean()

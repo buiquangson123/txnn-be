@@ -8,12 +8,14 @@ import { ThanhVienModule } from '../thanh-vien/thanh-vien.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: DoanhNghiep.name, schema: DoanhNghiepSchema }]),
+    MongooseModule.forFeature([
+      { name: DoanhNghiep.name, schema: DoanhNghiepSchema },
+    ]),
     GoiDichVuModule,
     ThanhVienModule,
   ],
   controllers: [DoanhNghiepController],
   providers: [DoanhNghiepService],
-  exports: [MongooseModule],
+  exports: [MongooseModule, DoanhNghiepService],
 })
 export class DoanhNghiepModule {}

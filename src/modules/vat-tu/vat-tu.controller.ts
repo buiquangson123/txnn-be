@@ -16,42 +16,45 @@ import { QueryVatTuDto } from './dto/query-vat-tu.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+@UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+@Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
 @Controller('vat-tu')
 export class VatTuController {
   constructor(private readonly vatTuService: VatTuService) {}
 
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateVatTuDto) {
-    return this.vatTuService.create(user.doanhNghiepId, dto);
+  create(@DoanhNghiepId() doanhNghiepId: string, @Body() dto: CreateVatTuDto) {
+    return this.vatTuService.create(doanhNghiepId, dto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QueryVatTuDto) {
-    return this.vatTuService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QueryVatTuDto,
+  ) {
+    return this.vatTuService.findAll(doanhNghiepId, query);
   }
 
   @Get(':id')
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.vatTuService.findOne(user.doanhNghiepId, id);
+  findOne(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.vatTuService.findOne(doanhNghiepId, id);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateVatTuDto,
   ) {
-    return this.vatTuService.update(user.doanhNghiepId, id, dto);
+    return this.vatTuService.update(doanhNghiepId, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.vatTuService.remove(user.doanhNghiepId, id);
+  remove(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.vatTuService.remove(doanhNghiepId, id);
   }
 }

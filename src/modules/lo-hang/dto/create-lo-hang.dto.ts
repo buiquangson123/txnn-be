@@ -15,9 +15,21 @@ export class CreateLoHangDto {
   @IsMongoId()
   loaiLoHangId: string;
 
+  @IsString()
+  tenLoHang: string;
+
   @IsOptional()
   @IsString()
-  tenLoHang?: string;
+  moTa?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  giayChungNhan?: string[];
+
+  @IsOptional()
+  @IsString()
+  quyCachDongGoi?: string;
 
   @IsEnum(DoiTuongLoHang)
   doiTuong: DoiTuongLoHang;
@@ -38,6 +50,10 @@ export class CreateLoHangDto {
   @IsOptional()
   @IsMongoId()
   donViSanXuatId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  donViPhanPhoiId?: string;
 
   @IsOptional()
   @IsNumber()

@@ -1,19 +1,32 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { CodeGeneratorService } from '../../common/code-generator/code-generator.service';
 import { CounterService } from '../../common/counter/counter.service';
-import { GoiDichVu, GoiDichVuDocument } from '../goi-dich-vu/schemas/goi-dich-vu.schema';
+import {
+  GoiDichVu,
+  GoiDichVuDocument,
+} from '../goi-dich-vu/schemas/goi-dich-vu.schema';
 import { ThanhVienService } from '../thanh-vien/thanh-vien.service';
 import { CreateDoanhNghiepDto } from './dto/create-doanh-nghiep.dto';
 import { UpdateDoanhNghiepDto } from './dto/update-doanh-nghiep.dto';
 import { QueryDoanhNghiepDto } from './dto/query-doanh-nghiep.dto';
+import { GanGoiDichVuDto } from './dto/gan-goi-dich-vu.dto';
+import { DangKyDoanhNghiepDto } from './dto/dang-ky-doanh-nghiep.dto';
 import {
   DoanhNghiep,
   DoanhNghiepDocument,
+  LoaiHinhDoanhNghiep,
   TrangThaiDoanhNghiep,
 } from './schemas/doanh-nghiep.schema';
+
+/** Freemium tự kích hoạt: chưa có cổng thanh toán thật nên dùng thời hạn mặc định cố định */
+const THOI_HAN_TU_KICH_HOAT_NGAY = 30;
 
 @Injectable()
 export class DoanhNghiepService {
@@ -28,28 +41,24 @@ export class DoanhNghiepService {
     private readonly thanhVienService: ThanhVienService,
   ) {}
 
-  private async tinhKhoangThoiGianGoi(goiDichVuId: string) {
-    const goiDichVu = await this.goiDichVuModel.findById(goiDichVuId).exec();
-    if (!goiDichVu) {
-      throw new BadRequestException('Gói dịch vụ không tồn tại');
-    }
-    const ngayBatDau = new Date();
-    const ngayKetThuc = goiDichVu.thoiHanNgay
-      ? new Date(ngayBatDau.getTime() + goiDichVu.thoiHanNgay * 24 * 60 * 60 * 1000)
-      : undefined;
-    return { ngayBatDau, ngayKetThuc };
-  }
-
   async create(dto: CreateDoanhNghiepDto) {
     let maDoanhNghiep = dto.maDoanhNghiep;
     if (!maDoanhNghiep) {
       const prefix = this.configService.get<string>('ICHECK_PREFIX', '9999999');
-      const sequence = await this.counterService.getNextSequence('ma_doanh_nghiep');
-      maDoanhNghiep = this.codeGeneratorService.generateMaDoanhNghiep(prefix, sequence);
+      const sequence =
+        await this.counterService.getNextSequence('ma_doanh_nghiep');
+      maDoanhNghiep = this.codeGeneratorService.generateMaDoanhNghiep(
+        prefix,
+        sequence,
+      );
     } else {
-      const daTonTai = await this.doanhNghiepModel.findOne({ maDoanhNghiep }).exec();
+      const daTonTai = await this.doanhNghiepModel
+        .findOne({ maDoanhNghiep })
+        .exec();
       if (daTonTai) {
-        throw new BadRequestException('Mã doanh nghiệp đã tồn tại, vui lòng nhập lại');
+        throw new BadRequestException(
+          'Mã doanh nghiệp đã tồn tại, vui lòng nhập lại',
+        );
       }
     }
 
@@ -66,19 +75,6 @@ export class DoanhNghiepService {
       lichSuGoiDichVu: [],
     };
 
-    if (dto.goiDichVuId) {
-      const { ngayBatDau, ngayKetThuc } = await this.tinhKhoangThoiGianGoi(
-        dto.goiDichVuId,
-      );
-      const goiDichVuObjectId = new Types.ObjectId(dto.goiDichVuId);
-      doc.goiDichVu = goiDichVuObjectId;
-      doc.ngayBatDauGoi = ngayBatDau;
-      doc.ngayKetThucGoi = ngayKetThuc;
-      doc.lichSuGoiDichVu = [
-        { goiDichVu: goiDichVuObjectId, ngayBatDau, ngayKetThuc },
-      ];
-    }
-
     const doanhNghiep = await this.doanhNghiepModel.create(doc);
 
     if (dto.sdtThanhVienDauTien) {
@@ -90,6 +86,78 @@ export class DoanhNghiepService {
     }
 
     return { doanhNghiep };
+  }
+
+  /**
+   * Tự đăng ký (Freemium, new-requirement.md giai đoạn 1) - không cần System Admin thao tác.
+   * Tạo doanh nghiệp mới ở trạng thái "Chưa kích hoạt" + tài khoản Admin DN đầu tiên với
+   * mật khẩu do chính người dùng chọn (không phải mật khẩu tạm thời).
+   */
+  async dangKyTuDo(dto: DangKyDoanhNghiepDto) {
+    const prefix = this.configService.get<string>('ICHECK_PREFIX', '9999999');
+    const sequence =
+      await this.counterService.getNextSequence('ma_doanh_nghiep');
+    const maDoanhNghiep = this.codeGeneratorService.generateMaDoanhNghiep(
+      prefix,
+      sequence,
+    );
+
+    const doanhNghiep = await this.doanhNghiepModel.create({
+      tenDoanhNghiep: dto.tenDoanhNghiep,
+      maDoanhNghiep,
+      loaiHinh: LoaiHinhDoanhNghiep.DOANH_NGHIEP,
+      soDienThoai: dto.soDienThoai,
+      trangThai: TrangThaiDoanhNghiep.CHO_KICH_HOAT,
+      lichSuGoiDichVu: [],
+    });
+
+    const thanhVien = await this.thanhVienService.taoAdminTuDangKy(
+      (doanhNghiep._id as Types.ObjectId).toString(),
+      dto.soDienThoai,
+      dto.matKhau,
+      dto.hoTen,
+    );
+
+    return { doanhNghiep, thanhVien };
+  }
+
+  /**
+   * Tự kích hoạt (Freemium) - Admin DN tự chọn 1 gói dịch vụ để mở khóa, không qua System Admin.
+   * Chưa có cổng thanh toán thật nên kích hoạt ngay, thời hạn mặc định 30 ngày kể từ lúc này.
+   */
+  async tuKichHoat(doanhNghiepId: string, goiDichVuId: string) {
+    const doanhNghiep = await this.doanhNghiepModel
+      .findById(doanhNghiepId)
+      .exec();
+    if (!doanhNghiep) {
+      throw new NotFoundException('Không tìm thấy doanh nghiệp');
+    }
+    if (doanhNghiep.trangThai !== TrangThaiDoanhNghiep.CHO_KICH_HOAT) {
+      throw new BadRequestException(
+        'Doanh nghiệp không ở trạng thái chờ kích hoạt',
+      );
+    }
+    const goiDichVu = await this.goiDichVuModel.findById(goiDichVuId).exec();
+    if (!goiDichVu) {
+      throw new BadRequestException('Gói dịch vụ không tồn tại');
+    }
+
+    const ngayBatDau = new Date();
+    const ngayKetThuc = new Date(
+      ngayBatDau.getTime() + THOI_HAN_TU_KICH_HOAT_NGAY * 24 * 60 * 60 * 1000,
+    );
+    const goiDichVuObjectId = new Types.ObjectId(goiDichVuId);
+    doanhNghiep.goiDichVu = goiDichVuObjectId;
+    doanhNghiep.ngayBatDauGoi = ngayBatDau;
+    doanhNghiep.ngayKetThucGoi = ngayKetThuc;
+    doanhNghiep.trangThai = TrangThaiDoanhNghiep.HOAT_DONG;
+    doanhNghiep.lichSuGoiDichVu.push({
+      goiDichVu: goiDichVuObjectId,
+      ngayBatDau,
+      ngayKetThuc,
+    });
+    await doanhNghiep.save();
+    return doanhNghiep;
   }
 
   findAll(query: QueryDoanhNghiepDto) {
@@ -128,7 +196,9 @@ export class DoanhNghiepService {
         .findOne({ maDoanhNghiep: dto.maDoanhNghiep, _id: { $ne: id } })
         .exec();
       if (trung) {
-        throw new BadRequestException('Mã doanh nghiệp đã tồn tại, vui lòng nhập lại');
+        throw new BadRequestException(
+          'Mã doanh nghiệp đã tồn tại, vui lòng nhập lại',
+        );
       }
     }
     const doanhNghiep = await this.doanhNghiepModel
@@ -158,13 +228,24 @@ export class DoanhNghiepService {
     return doanhNghiep;
   }
 
-  async ganGoiDichVu(id: string, goiDichVuId: string) {
+  async ganGoiDichVu(id: string, dto: GanGoiDichVuDto) {
     const doanhNghiep = await this.doanhNghiepModel.findById(id).exec();
     if (!doanhNghiep) {
       throw new NotFoundException('Không tìm thấy doanh nghiệp');
     }
-    const { ngayBatDau, ngayKetThuc } = await this.tinhKhoangThoiGianGoi(goiDichVuId);
-    const goiDichVuObjectId = new Types.ObjectId(goiDichVuId);
+    const goiDichVu = await this.goiDichVuModel
+      .findById(dto.goiDichVuId)
+      .exec();
+    if (!goiDichVu) {
+      throw new BadRequestException('Gói dịch vụ không tồn tại');
+    }
+    const ngayBatDau = new Date(dto.ngayBatDau);
+    const ngayKetThuc = new Date(dto.ngayKetThuc);
+    if (ngayKetThuc <= ngayBatDau) {
+      throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
+    }
+
+    const goiDichVuObjectId = new Types.ObjectId(dto.goiDichVuId);
     doanhNghiep.goiDichVu = goiDichVuObjectId;
     doanhNghiep.ngayBatDauGoi = ngayBatDau;
     doanhNghiep.ngayKetThucGoi = ngayKetThuc;

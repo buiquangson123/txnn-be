@@ -4,7 +4,10 @@ import { Model } from 'mongoose';
 import { CreateLoaiKhoiLuongDto } from './dto/create-loai-khoi-luong.dto';
 import { UpdateLoaiKhoiLuongDto } from './dto/update-loai-khoi-luong.dto';
 import { QueryLoaiKhoiLuongDto } from './dto/query-loai-khoi-luong.dto';
-import { LoaiKhoiLuong, LoaiKhoiLuongDocument } from './schemas/loai-khoi-luong.schema';
+import {
+  LoaiKhoiLuong,
+  LoaiKhoiLuongDocument,
+} from './schemas/loai-khoi-luong.schema';
 
 @Injectable()
 export class LoaiKhoiLuongService {
@@ -14,7 +17,10 @@ export class LoaiKhoiLuongService {
   ) {}
 
   create(doanhNghiepId: string, dto: CreateLoaiKhoiLuongDto) {
-    return this.loaiKhoiLuongModel.create({ ...dto, doanhNghiep: doanhNghiepId });
+    return this.loaiKhoiLuongModel.create({
+      ...dto,
+      doanhNghiep: doanhNghiepId,
+    });
   }
 
   findAll(doanhNghiepId: string, query: QueryLoaiKhoiLuongDto) {
@@ -27,7 +33,9 @@ export class LoaiKhoiLuongService {
 
   async update(doanhNghiepId: string, id: string, dto: UpdateLoaiKhoiLuongDto) {
     const item = await this.loaiKhoiLuongModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, {
+        new: true,
+      })
       .exec();
     if (!item) {
       throw new NotFoundException('Không tìm thấy loại khối lượng');

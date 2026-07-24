@@ -29,11 +29,24 @@ export class GoiDichVuController {
     return this.goiDichVuService.create(dto);
   }
 
+  /** Mở quyền xem (không phải sửa) cho tài khoản DN - phục vụ luồng tự chọn gói khi kích hoạt */
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Get()
   findAll(@Query() query: QueryGoiDichVuDto) {
     return this.goiDichVuService.findAll(query);
   }
 
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.goiDichVuService.findOne(id);

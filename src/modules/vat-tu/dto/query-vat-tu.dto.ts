@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
 import { NhomVatTu } from '../schemas/vat-tu.schema';
 
 export class QueryVatTuDto {
@@ -11,6 +11,6 @@ export class QueryVatTuDto {
   nhomVatTu?: NhomVatTu;
 
   @IsOptional()
-  @IsString()
-  nhaCungCap?: string;
+  @IsMongoId()
+  nhaCungCapId?: string;
 }

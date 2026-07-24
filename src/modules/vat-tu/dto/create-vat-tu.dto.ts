@@ -16,8 +16,8 @@ export class CreateVatTuDto {
   nhomVatTu: NhomVatTu;
 
   @IsOptional()
-  @IsString()
-  nhaCungCap?: string;
+  @IsMongoId()
+  nhaCungCapId?: string;
 
   @IsOptional()
   @IsString()
@@ -29,7 +29,11 @@ export class CreateVatTuDto {
 
   @IsOptional()
   @IsDateString()
-  hanSuDung?: string;
+  hanSuDungTu?: string;
+
+  @IsOptional()
+  @IsDateString()
+  hanSuDungDen?: string;
 
   @IsOptional()
   @IsArray()

@@ -16,37 +16,43 @@ import { QueryLoaiLoHangDto } from './dto/query-loai-lo-hang.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+@UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+@Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
 @Controller('loai-lo-hang')
 export class LoaiLoHangController {
   constructor(private readonly loaiLoHangService: LoaiLoHangService) {}
 
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateLoaiLoHangDto) {
-    return this.loaiLoHangService.create(user.doanhNghiepId, dto);
+  create(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Body() dto: CreateLoaiLoHangDto,
+  ) {
+    return this.loaiLoHangService.create(doanhNghiepId, dto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QueryLoaiLoHangDto) {
-    return this.loaiLoHangService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QueryLoaiLoHangDto,
+  ) {
+    return this.loaiLoHangService.findAll(doanhNghiepId, query);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateLoaiLoHangDto,
   ) {
-    return this.loaiLoHangService.update(user.doanhNghiepId, id, dto);
+    return this.loaiLoHangService.update(doanhNghiepId, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.loaiLoHangService.remove(user.doanhNghiepId, id);
+  remove(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.loaiLoHangService.remove(doanhNghiepId, id);
   }
 }

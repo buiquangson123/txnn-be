@@ -12,13 +12,18 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {
     this.bucketName = this.configService.get<string>('R2_BUCKET_NAME', '');
-    this.publicUrlBase = this.configService.get<string>('R2_PUBLIC_URL_BASE', '').replace(/\/$/, '');
+    this.publicUrlBase = this.configService
+      .get<string>('R2_PUBLIC_URL_BASE', '')
+      .replace(/\/$/, '');
     this.s3Client = new S3Client({
       region: 'auto',
       endpoint: this.configService.get<string>('R2_ENDPOINT'),
       credentials: {
         accessKeyId: this.configService.get<string>('R2_ACCESS_KEY_ID', ''),
-        secretAccessKey: this.configService.get<string>('R2_SECRET_ACCESS_KEY', ''),
+        secretAccessKey: this.configService.get<string>(
+          'R2_SECRET_ACCESS_KEY',
+          '',
+        ),
       },
     });
   }

@@ -16,10 +16,12 @@ import { QueryNhatKyTruyXuatDto } from './dto/query-nhat-ky-truy-xuat.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { DoanhNghiepId } from '../auth/decorators/doanh-nghiep-id.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/jwt-payload.interface';
+import type { JwtPayload } from '../auth/jwt-payload.interface';
 import { Role } from '../../common/enums/role.enum';
 import { DoiTuongNhatKy } from './schemas/nhat-ky-truy-xuat.schema';
+import { DoanhNghiepKichHoatGuard } from '../../common/tenant-status/doanh-nghiep-kich-hoat.guard';
 
 @Controller('nhat-ky-truy-xuat')
 export class NhatKyTruyXuatController {
@@ -31,45 +33,75 @@ export class NhatKyTruyXuatController {
     @Query('doiTuongLienQuan') doiTuongLienQuan: DoiTuongNhatKy,
     @Query('doiTuongId') doiTuongId: string,
   ) {
-    return this.nhatKyTruyXuatService.layNhatKyCongKhai(doiTuongLienQuan, doiTuongId);
+    return this.nhatKyTruyXuatService.layNhatKyCongKhai(
+      doiTuongLienQuan,
+      doiTuongId,
+    );
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY, Role.NHAN_VIEN)
+  @UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Post()
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateNhatKyTruyXuatDto) {
-    return this.nhatKyTruyXuatService.create(user.doanhNghiepId, dto);
+  create(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Body() dto: CreateNhatKyTruyXuatDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.nhatKyTruyXuatService.create(doanhNghiepId, dto, user.sub);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY, Role.NHAN_VIEN)
+  @UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: QueryNhatKyTruyXuatDto) {
-    return this.nhatKyTruyXuatService.findAll(user.doanhNghiepId, query);
+  findAll(
+    @DoanhNghiepId() doanhNghiepId: string,
+    @Query() query: QueryNhatKyTruyXuatDto,
+  ) {
+    return this.nhatKyTruyXuatService.findAll(doanhNghiepId, query);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY, Role.NHAN_VIEN)
+  @UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Get(':id')
-  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.nhatKyTruyXuatService.findOne(user.doanhNghiepId, id);
+  findOne(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.nhatKyTruyXuatService.findOne(doanhNghiepId, id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY, Role.NHAN_VIEN)
+  @UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+  @Roles(
+    Role.SYSTEM_ADMIN,
+    Role.ADMIN_DOANH_NGHIEP,
+    Role.QUAN_LY,
+    Role.NHAN_VIEN,
+  )
   @Patch(':id')
   update(
-    @CurrentUser() user: JwtPayload,
+    @DoanhNghiepId() doanhNghiepId: string,
     @Param('id') id: string,
     @Body() dto: UpdateNhatKyTruyXuatDto,
   ) {
-    return this.nhatKyTruyXuatService.update(user.doanhNghiepId, id, dto);
+    return this.nhatKyTruyXuatService.update(doanhNghiepId, id, dto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
+  @UseGuards(JwtAuthGuard, RolesGuard, DoanhNghiepKichHoatGuard)
+  @Roles(Role.SYSTEM_ADMIN, Role.ADMIN_DOANH_NGHIEP, Role.QUAN_LY)
   @Delete(':id')
-  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.nhatKyTruyXuatService.remove(user.doanhNghiepId, id);
+  remove(@DoanhNghiepId() doanhNghiepId: string, @Param('id') id: string) {
+    return this.nhatKyTruyXuatService.remove(doanhNghiepId, id);
   }
 }

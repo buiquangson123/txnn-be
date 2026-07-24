@@ -8,11 +8,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '../../common/enums/role.enum';
-import { DoanhNghiep, DoanhNghiepDocument } from '../doanh-nghiep/schemas/doanh-nghiep.schema';
+import {
+  DoanhNghiep,
+  DoanhNghiepDocument,
+} from '../doanh-nghiep/schemas/doanh-nghiep.schema';
 import { CreateThanhVienDto } from './dto/create-thanh-vien.dto';
 import { UpdateThanhVienDto } from './dto/update-thanh-vien.dto';
 import { QueryThanhVienDto } from './dto/query-thanh-vien.dto';
-import { ThanhVien, ThanhVienDocument, TrangThaiThanhVien } from './schemas/thanh-vien.schema';
+import {
+  ThanhVien,
+  ThanhVienDocument,
+  TrangThaiThanhVien,
+} from './schemas/thanh-vien.schema';
 
 function sinhMatKhauNgauNhien(): string {
   return Math.random().toString(36).slice(-8);
@@ -32,7 +39,9 @@ export class ThanhVienService {
     if (excludeId) filter._id = { $ne: excludeId };
     const trung = await this.thanhVienModel.findOne(filter).exec();
     if (trung) {
-      throw new BadRequestException('Số điện thoại đã được sử dụng bởi thành viên khác');
+      throw new BadRequestException(
+        'Số điện thoại đã được sử dụng bởi thành viên khác',
+      );
     }
   }
 
@@ -65,8 +74,42 @@ export class ThanhVienService {
     return { thanhVien, matKhauTamThoi };
   }
 
-  async create(doanhNghiepId: string, dto: CreateThanhVienDto) {
-    const doanhNghiep = await this.doanhNghiepModel.findById(doanhNghiepId).exec();
+  /**
+   * Dùng khi tự đăng ký (Freemium) - tạo tài khoản Admin DN đầu tiên với mật khẩu do
+   * chính người dùng chọn (khác taoAdminDauTien(): mật khẩu tạm thời do hệ thống sinh,
+   * dùng khi System Admin khởi tạo DN thay cho khách hàng).
+   */
+  async taoAdminTuDangKy(
+    doanhNghiepId: string,
+    soDienThoai: string,
+    matKhau: string,
+    hoTen: string,
+  ) {
+    await this.kiemTraTrungSdt(soDienThoai);
+    const matKhauHash = await bcrypt.hash(matKhau, 10);
+    return this.thanhVienModel.create({
+      hoTen,
+      soDienThoai,
+      matKhauHash,
+      vaiTro: Role.ADMIN_DOANH_NGHIEP,
+      doanhNghiep: new Types.ObjectId(doanhNghiepId),
+      trangThai: TrangThaiThanhVien.HOAT_DONG,
+    });
+  }
+
+  /** true nếu vai trò này thấy toàn bộ thành viên trong DN, false nếu chỉ thấy người do mình tạo */
+  private xemDuocToanBo(vaiTro: Role): boolean {
+    return vaiTro === Role.SYSTEM_ADMIN || vaiTro === Role.ADMIN_DOANH_NGHIEP;
+  }
+
+  async create(
+    doanhNghiepId: string,
+    dto: CreateThanhVienDto,
+    nguoiTaoId: string,
+  ) {
+    const doanhNghiep = await this.doanhNghiepModel
+      .findById(doanhNghiepId)
+      .exec();
     if (!doanhNghiep) {
       throw new BadRequestException('Doanh nghiệp không tồn tại');
     }
@@ -81,8 +124,10 @@ export class ThanhVienService {
       matKhauHash,
       email: dto.email,
       vaiTro: dto.vaiTro,
+      chucDanh: dto.chucDanh,
       donViPhongBan: dto.donViPhongBan,
       doanhNghiep: doanhNghiep._id,
+      nguoiTao: new Types.ObjectId(nguoiTaoId),
       trangThai: TrangThaiThanhVien.HOAT_DONG,
     });
 
@@ -93,8 +138,13 @@ export class ThanhVienService {
     };
   }
 
-  findAll(doanhNghiepId: string, query: QueryThanhVienDto) {
+  findAll(
+    doanhNghiepId: string,
+    query: QueryThanhVienDto,
+    nguoiXem: { id: string; vaiTro: Role },
+  ) {
     const filter: Record<string, unknown> = { doanhNghiep: doanhNghiepId };
+    if (!this.xemDuocToanBo(nguoiXem.vaiTro)) filter.nguoiTao = nguoiXem.id;
     if (query.vaiTro) filter.vaiTro = query.vaiTro;
     if (query.trangThai) filter.trangThai = query.trangThai;
     if (query.keyword) {
@@ -106,22 +156,49 @@ export class ThanhVienService {
     return this.thanhVienModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
-  async findOne(doanhNghiepId: string, id: string) {
-    const thanhVien = await this.thanhVienModel
-      .findOne({ _id: id, doanhNghiep: doanhNghiepId })
-      .exec();
+  async findOne(
+    doanhNghiepId: string,
+    id: string,
+    nguoiXem: { id: string; vaiTro: Role },
+  ) {
+    const filter: Record<string, unknown> = {
+      _id: id,
+      doanhNghiep: doanhNghiepId,
+    };
+    if (!this.xemDuocToanBo(nguoiXem.vaiTro)) filter.nguoiTao = nguoiXem.id;
+    const thanhVien = await this.thanhVienModel.findOne(filter).exec();
     if (!thanhVien) {
       throw new NotFoundException('Không tìm thấy thành viên');
     }
     return thanhVien;
   }
 
-  async update(doanhNghiepId: string, id: string, dto: UpdateThanhVienDto) {
+  async update(
+    doanhNghiepId: string,
+    id: string,
+    dto: UpdateThanhVienDto,
+    nguoiXem: { id: string; vaiTro: Role },
+  ) {
+    const thanhVienHienTai = await this.findOne(doanhNghiepId, id, nguoiXem);
+
     if (dto.soDienThoai) {
       await this.kiemTraTrungSdt(dto.soDienThoai, id);
     }
+    if (dto.vaiTro && dto.vaiTro !== thanhVienHienTai.vaiTro) {
+      if (dto.vaiTro !== Role.QUAN_LY && dto.vaiTro !== Role.NHAN_VIEN) {
+        throw new BadRequestException('Vai trò mới không hợp lệ');
+      }
+      if (thanhVienHienTai.vaiTro === Role.ADMIN_DOANH_NGHIEP) {
+        throw new BadRequestException(
+          'Không thể đổi vai trò của Admin doanh nghiệp',
+        );
+      }
+    }
+
     const thanhVien = await this.thanhVienModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, {
+        new: true,
+      })
       .exec();
     if (!thanhVien) {
       throw new NotFoundException('Không tìm thấy thành viên');
@@ -174,7 +251,10 @@ export class ThanhVienService {
   }
 
   /** Dùng bởi Auth module để xác thực đăng nhập theo SĐT + mật khẩu. */
-  async xacThuc(soDienThoai: string, matKhau: string): Promise<ThanhVienDocument> {
+  async xacThuc(
+    soDienThoai: string,
+    matKhau: string,
+  ): Promise<ThanhVienDocument> {
     const thanhVien = await this.thanhVienModel
       .findOne({ soDienThoai })
       .select('+matKhauHash')

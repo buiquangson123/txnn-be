@@ -6,6 +6,7 @@ export enum LoaiHinhDoanhNghiep {
   DOANH_NGHIEP = 'doanh_nghiep',
   HTX = 'htx',
   TO_HOP_TAC = 'to_hop_tac',
+  HO_KINH_DOANH = 'ho_kinh_doanh',
 }
 
 export enum TrangThaiDoanhNghiep {
@@ -18,7 +19,11 @@ export type DoanhNghiepDocument = DoanhNghiep & Document;
 
 @Schema({ timestamps: true, _id: false })
 export class LichSuGoiDichVu {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: GoiDichVu.name, required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: GoiDichVu.name,
+    required: true,
+  })
   goiDichVu: Types.ObjectId;
 
   @Prop({ required: true })
@@ -28,7 +33,8 @@ export class LichSuGoiDichVu {
   ngayKetThuc?: Date;
 }
 
-export const LichSuGoiDichVuSchema = SchemaFactory.createForClass(LichSuGoiDichVu);
+export const LichSuGoiDichVuSchema =
+  SchemaFactory.createForClass(LichSuGoiDichVu);
 
 @Schema({ timestamps: true, collection: 'doanh_nghiep' })
 export class DoanhNghiep {

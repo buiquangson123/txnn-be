@@ -6,7 +6,11 @@ export type LoaiKhoiLuongDocument = LoaiKhoiLuong & Document;
 
 @Schema({ timestamps: true, collection: 'loai_khoi_luong' })
 export class LoaiKhoiLuong {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: DoanhNghiep.name, required: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: DoanhNghiep.name,
+    required: true,
+  })
   doanhNghiep: Types.ObjectId;
 
   @Prop({ required: true, trim: true })

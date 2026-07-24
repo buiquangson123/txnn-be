@@ -1,14 +1,27 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CodeGeneratorService } from '../../common/code-generator/code-generator.service';
 import { CounterService } from '../../common/counter/counter.service';
-import { DoanhNghiep, DoanhNghiepDocument } from '../doanh-nghiep/schemas/doanh-nghiep.schema';
-import { LoaiDiaDiem, LoaiDiaDiemDocument } from '../loai-dia-diem/schemas/loai-dia-diem.schema';
+import {
+  DoanhNghiep,
+  DoanhNghiepDocument,
+} from '../doanh-nghiep/schemas/doanh-nghiep.schema';
+import {
+  LoaiDiaDiem,
+  LoaiDiaDiemDocument,
+} from '../loai-dia-diem/schemas/loai-dia-diem.schema';
 import { CreateNhaXuongKhoDto } from './dto/create-nha-xuong-kho.dto';
 import { UpdateNhaXuongKhoDto } from './dto/update-nha-xuong-kho.dto';
 import { QueryNhaXuongKhoDto } from './dto/query-nha-xuong-kho.dto';
-import { NhaXuongKho, NhaXuongKhoDocument } from './schemas/nha-xuong-kho.schema';
+import {
+  NhaXuongKho,
+  NhaXuongKhoDocument,
+} from './schemas/nha-xuong-kho.schema';
 
 @Injectable()
 export class NhaXuongKhoService {
@@ -24,7 +37,9 @@ export class NhaXuongKhoService {
   ) {}
 
   private async layMaAI(loaiDiaDiemId: string): Promise<string> {
-    const loaiDiaDiem = await this.loaiDiaDiemModel.findById(loaiDiaDiemId).exec();
+    const loaiDiaDiem = await this.loaiDiaDiemModel
+      .findById(loaiDiaDiemId)
+      .exec();
     if (!loaiDiaDiem) {
       throw new BadRequestException('Loại địa điểm không tồn tại');
     }
@@ -41,11 +56,15 @@ export class NhaXuongKhoService {
         throw new BadRequestException('Mã GLN đã tồn tại, vui lòng nhập lại');
       }
     } else {
-      const doanhNghiep = await this.doanhNghiepModel.findById(doanhNghiepId).exec();
+      const doanhNghiep = await this.doanhNghiepModel
+        .findById(doanhNghiepId)
+        .exec();
       if (!doanhNghiep) {
         throw new BadRequestException('Doanh nghiệp không tồn tại');
       }
-      const seq = await this.counterService.getNextSequence(`ma_dia_diem:${doanhNghiepId}`);
+      const seq = await this.counterService.getNextSequence(
+        `ma_dia_diem:${doanhNghiepId}`,
+      );
       maGLN = this.codeGeneratorService.generateGtinOrGlnNoiBo(
         doanhNghiep.maDoanhNghiep,
         String(seq).padStart(4, '0'),
@@ -61,9 +80,11 @@ export class NhaXuongKhoService {
       doanhNghiep: doanhNghiepId,
       tenDiaDiem: dto.tenDiaDiem,
       diaChi: dto.diaChi,
-      loaiDiaDiemNoiBo: dto.loaiDiaDiemNoiBo,
       nguoiPhuTrach: dto.nguoiPhuTrach,
       congSuat: dto.congSuat,
+      dienTich: dto.dienTich,
+      maCoSoChanNuoiDongGoi: dto.maCoSoChanNuoiDongGoi,
+      hinhAnh: dto.hinhAnh ?? [],
       maGLN,
       loaiDiaDiem: dto.loaiDiaDiemId,
       maTruyVetDiaDiem,
@@ -72,7 +93,6 @@ export class NhaXuongKhoService {
 
   findAll(doanhNghiepId: string, query: QueryNhaXuongKhoDto) {
     const filter: Record<string, unknown> = { doanhNghiep: doanhNghiepId };
-    if (query.loaiDiaDiemNoiBo) filter.loaiDiaDiemNoiBo = query.loaiDiaDiemNoiBo;
     if (query.keyword) {
       filter.$or = [
         { tenDiaDiem: { $regex: query.keyword, $options: 'i' } },
@@ -100,7 +120,9 @@ export class NhaXuongKhoService {
 
   async update(doanhNghiepId: string, id: string, dto: UpdateNhaXuongKhoDto) {
     const nhaXuongKho = await this.nhaXuongKhoModel
-      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, { new: true })
+      .findOneAndUpdate({ _id: id, doanhNghiep: doanhNghiepId }, dto, {
+        new: true,
+      })
       .exec();
     if (!nhaXuongKho) {
       throw new NotFoundException('Không tìm thấy nhà xưởng/kho');

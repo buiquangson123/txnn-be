@@ -22,11 +22,6 @@ export class CreateGoiDichVuDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  thoiHanNgay?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
   giaGoi?: number;
 
   @IsOptional()
@@ -35,5 +30,5 @@ export class CreateGoiDichVuDto {
 
   @IsOptional()
   @IsString()
-  moTaQuyenLoi?: string;
+  ghiChu?: string;
 }
